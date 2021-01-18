@@ -42,3 +42,23 @@ cnn.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2))
 cnn.add(tf.keras.layers.Flatten())
 cnn.add(tf.keras.layers.Dense(units=128,activation='relu'))
 cnn.add(tf.keras.layers.Dense(units=len(df['breed'].unique()),activation='softmax'))
+cnn.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+cnn.fit(train_set,validation_data=test_set,epochs=35,steps_per_epoch=len(train_set),)
+cnn.save("model.h5")
+imagepath='test/'
+allimages=[]
+alldata=[]
+for filename in os.listdir(imagepath):
+    single_image = image.load_img(f'test/{filename}',target_size=(64,64))
+    single_image = image.img_to_array(single_image)
+    single_image = np.expand_dims(single_image,axis=0)
+    result=cnn.predict(single_image)
+    oldata=[]
+    for i in range(len(result[0])):
+        newarr={'dogname':list(train_set.class_indices)[i],'value':result[0][i],'imagename':filename}
+        oldata.append(newarr)
+    alldata.append(oldata)
+#     print(result[0])
+list(train_set.class_indices)[0]
+print(alldata)
+   
