@@ -10,6 +10,17 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.layers import Flatten,Dense
 from tensorflow.keras.models import Model
 
+vgg16=VGG16(input_shape=[224,224,3],weights='imagenet',include_top=False)
+
+for layer in vgg16.layers:
+    layer.trainable=False
+
+x= Flatten()(vgg16.output)
+
+predictions=Dense(120,activation='softmax')(x)
+
+model = Model(inputs=vgg16.input,outputs=predictions)
+
 df=pd.read_csv('labels.csv')
 n_train=8176
 X_train=df.loc[:n_train,:]
@@ -34,17 +45,17 @@ for filename in os.listdir(imagepath):
     single_image = image.img_to_array(single_image)
     print(single_image)
     
-cnn = tf.keras.models.Sequential()
-cnn.add(tf.keras.layers.Conv2D(filters=32,kernel_size=3,activation='relu',input_shape=[64,64,3]))
-cnn.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2))
-cnn.add(tf.keras.layers.Conv2D(filters=32,kernel_size=3,activation='relu'))
-cnn.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2))
-cnn.add(tf.keras.layers.Flatten())
-cnn.add(tf.keras.layers.Dense(units=128,activation='relu'))
-cnn.add(tf.keras.layers.Dense(units=len(df['breed'].unique()),activation='softmax'))
-cnn.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
-cnn.fit(train_set,validation_data=test_set,epochs=35,steps_per_epoch=len(train_set),)
-cnn.save("model.h5")
+# cnn = tf.keras.models.Sequential()
+# cnn.add(tf.keras.layers.Conv2D(filters=32,kernel_size=3,activation='relu',input_shape=[64,64,3]))
+# cnn.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2))
+# cnn.add(tf.keras.layers.Conv2D(filters=32,kernel_size=3,activation='relu'))
+# cnn.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=2))
+# cnn.add(tf.keras.layers.Flatten())
+# cnn.add(tf.keras.layers.Dense(units=128,activation='relu'))
+# cnn.add(tf.keras.layers.Dense(units=len(df['breed'].unique()),activation='softmax'))
+model.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+model.fit(train_set,validation_data=test_set,epochs=35,steps_per_epoch=len(train_set),)
+model.save("model.h5")
 imagepath='test/'
 allimages=[]
 alldata=[]
@@ -52,7 +63,7 @@ for filename in os.listdir(imagepath):
     single_image = image.load_img(f'test/{filename}',target_size=(64,64))
     single_image = image.img_to_array(single_image)
     single_image = np.expand_dims(single_image,axis=0)
-    result=cnn.predict(single_image)
+    result=model.predict(single_image)
     oldata=[]
     for i in range(len(result[0])):
         newarr={'dogname':list(train_set.class_indices)[i],'value':result[0][i],'imagename':filename}
